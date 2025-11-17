@@ -14,7 +14,7 @@ export function Navbar() {
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text">AI Blog Generator</span>
+            <span className="text-xl font-bold gradient-text"> Blog Generator</span>
           </Link>
 
           <div className="flex items-center gap-4">

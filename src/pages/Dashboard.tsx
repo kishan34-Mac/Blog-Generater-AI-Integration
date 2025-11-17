@@ -39,7 +39,7 @@ export default function Dashboard() {
 
       if (error) throw error;
       setBlogs(data || []);
-    } catch (error: any) {
+    } catch (error: Error) {
       console.error('Error fetching blogs:', error);
       toast({
         title: "Failed to load blogs",
@@ -65,7 +65,7 @@ export default function Dashboard() {
         title: "Blog deleted",
         description: "The blog has been removed from your dashboard",
       });
-    } catch (error: any) {
+    } catch (error: Error) {
       toast({
         title: "Failed to delete blog",
         description: error.message,
