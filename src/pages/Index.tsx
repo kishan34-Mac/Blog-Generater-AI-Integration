@@ -13,7 +13,7 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Powered by Advanced AI</span>
+            <span className="text-sm font-medium">Powered by Advanced LLM</span>
           </div>
 
           <h1 className="text-6xl md:text-7xl font-bold mb-6 animate-fade-in">
