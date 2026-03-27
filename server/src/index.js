@@ -20,7 +20,17 @@ const blogRoutes = require('./routes/blogs');
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173' }));
+
+const allowedOrigins = process.env.FRONTEND_ORIGIN
+    ? process.env.FRONTEND_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : [];
+
+app.use(
+    cors({
+        origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+        credentials: true,
+    })
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);

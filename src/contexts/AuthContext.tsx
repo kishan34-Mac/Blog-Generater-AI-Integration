@@ -20,7 +20,7 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -35,6 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const getApiBase = () => {
+    const raw = import.meta.env.VITE_API_BASE;
+    if (raw && raw.trim().length > 0) {
+      return raw.replace(/\/+$/, "");
+    }
+    return "http://localhost:4000";
+  };
+
+  const API_BASE = getApiBase();
+
   // On mount: check token in localStorage and verify with backend
   useEffect(() => {
     const token = localStorage.getItem("bg_token");
@@ -43,12 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    fetch(
-      `${import.meta.env.VITE_API_BASE || "http://localhost:4000"}/api/auth/me`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    )
+    fetch(`${API_BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then(async (res) => {
         if (!res.ok) throw new Error("Invalid token");
         const data = await res.json();
@@ -65,16 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE || "http://localhost:4000"
-        }/api/auth/signup`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, fullName }),
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, fullName }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -104,16 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE || "http://localhost:4000"
-        }/api/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();

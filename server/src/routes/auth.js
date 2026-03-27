@@ -5,8 +5,20 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+const getJwtSecret = () => {
+    const secret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY || process.env.SECRET || process.env.AUTH_SECRET;
+    if (!secret) {
+        throw new Error('Missing JWT secret. Set JWT_SECRET, JWT_SECRET_KEY, SECRET, or AUTH_SECRET.');
+    }
+    return secret;
+};
+
 const signToken = (user) => {
-    return jwt.sign({ id: user._id, email: user.email, fullName: user.fullName }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    return jwt.sign(
+        { id: user._id, email: user.email, fullName: user.fullName },
+        getJwtSecret(),
+        { expiresIn: '7d' }
+    );
 };
 
 router.post('/signup', async (req, res) => {
@@ -55,7 +67,7 @@ router.get('/me', async (req, res) => {
         if (parts.length !== 2) return res.status(401).json({ error: 'Invalid authorization header' });
 
         const token = parts[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, getJwtSecret());
         const user = await User.findById(decoded.id).select('-passwordHash');
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ user });

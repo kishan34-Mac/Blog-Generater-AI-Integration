@@ -4,6 +4,14 @@ const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
+const getJwtSecret = () => {
+    const secret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY || process.env.SECRET || process.env.AUTH_SECRET;
+    if (!secret) {
+        throw new Error('Missing JWT secret. Set JWT_SECRET, JWT_SECRET_KEY, SECRET, or AUTH_SECRET.');
+    }
+    return secret;
+};
+
 const authMiddleware = (req, res, next) => {
     const auth = req.header('Authorization');
     if (!auth) return res.status(401).json({ error: 'No authorization header' });
@@ -11,7 +19,7 @@ const authMiddleware = (req, res, next) => {
     if (parts.length !== 2) return res.status(401).json({ error: 'Invalid authorization header' });
     const token = parts[1];
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, getJwtSecret());
         req.user = decoded;
         next();
     } catch (err) {
