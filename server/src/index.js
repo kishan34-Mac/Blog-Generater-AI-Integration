@@ -22,15 +22,33 @@ const app = express();
 app.use(express.json());
 
 const allowedOrigins = process.env.FRONTEND_ORIGIN
-    ? process.env.FRONTEND_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean)
+    ? process.env.FRONTEND_ORIGIN
+        .split(',')
+        .map((origin) => origin.trim().replace(/\/+$/, ""))
+        .filter(Boolean)
     : [];
 
-app.use(
-    cors({
-        origin: allowedOrigins.length > 0 ? allowedOrigins : true,
-        credentials: true,
-    })
-);
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        const normalizedOrigin = origin.replace(/\/+$/, "");
+        if (allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
+            return callback(null, true);
+        }
+
+        console.warn('Blocked CORS origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
