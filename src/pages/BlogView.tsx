@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 // Using custom backend API for fetching blog
 import { Button } from "@/components/ui/button";
+import { getResponseError } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Download, Calendar, Tag, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -44,8 +45,8 @@ export default function BlogView() {
         },
       );
       if (!res.ok) {
-        const errBody = await res.json();
-        throw new Error(errBody.error || "Failed to fetch blog");
+        const errorText = await getResponseError(res);
+        throw new Error(errorText || "Failed to fetch blog");
       }
 
       const { blog: data } = await res.json();

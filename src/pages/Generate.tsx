@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // Not using Supabase database anymore - saving via our API
 import { useAuth } from "@/contexts/AuthContext";
+import { getResponseError } from "@/lib/utils";
 
 interface GeneratedBlogData {
   title: string;
@@ -71,23 +72,39 @@ export default function Generate() {
     setGeneratedBlog(null);
 
     try {
+      const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || "")
+        .trim()
+        .replace(/\/+$/, "");
+      if (!supabaseUrl) {
+        throw new Error(
+          "Supabase function URL is not configured. Set VITE_SUPABASE_URL.",
+        );
+      }
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-blog`,
+        `${supabaseUrl}/functions/v1/generate-blog`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${
-              import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-            }`,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({ topic, tone, wordCount }),
         },
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to generate blog");
+        const errorText = await getResponseError(response);
+        throw new Error(errorText || "Failed to generate blog");
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("text/event-stream")) {
+        const errorText = await response.text();
+        throw new Error(
+          errorText ||
+            "Unexpected response type from AI service. Ensure VITE_SUPABASE_URL is configured correctly.",
+        );
       }
 
       if (!response.body) throw new Error("No response body");
@@ -96,6 +113,24 @@ export default function Generate() {
       const decoder = new TextDecoder();
       let buffer = "";
       let fullContent = "";
+
+      const processLine = (line: string) => {
+        if (!line.startsWith("data: ")) return;
+
+        const data = line.slice(6);
+        if (data === "[DONE]") return;
+
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) {
+            fullContent += content;
+            setStreamedContent(fullContent);
+          }
+        } catch {
+          // Ignore parse errors for incomplete or malformed event lines
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -107,22 +142,12 @@ export default function Generate() {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                fullContent += content;
-                setStreamedContent(fullContent);
-              }
-            } catch (e) {
-              // Ignore parse errors for incomplete JSON
-            }
-          }
+          processLine(line);
         }
+      }
+
+      if (buffer.trim()) {
+        processLine(buffer);
       }
 
       // Parse the final content as JSON
@@ -183,8 +208,8 @@ export default function Generate() {
           },
         );
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Failed to save blog");
+          const errorText = await getResponseError(res);
+          throw new Error(errorText || "Failed to save blog");
         }
 
         toast({

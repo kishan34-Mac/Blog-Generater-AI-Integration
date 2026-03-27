@@ -7,6 +7,7 @@ import {
 } from "react";
 // Using custom backend with MongoDB Atlas + JWT
 import { useToast } from "@/hooks/use-toast";
+import { getResponseError } from "@/lib/utils";
 
 interface AuthUser {
   id: string;
@@ -79,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to sign up");
+        const errorText = await getResponseError(response);
+        throw new Error(errorText || "Failed to sign up");
       }
 
       const data = await response.json();
@@ -113,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to sign in");
+        const errorText = await getResponseError(response);
+        throw new Error(errorText || "Failed to sign in");
       }
 
       const data = await response.json();

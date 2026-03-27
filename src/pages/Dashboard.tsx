@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 // Using custom backend API instead of Supabase
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { getResponseError } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -43,9 +44,12 @@ export default function Dashboard() {
         `${import.meta.env.VITE_API_BASE || "http://localhost:4000"}/api/blogs`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-      if (!res.ok) throw new Error("Failed to fetch blogs");
+      if (!res.ok) {
+        const errorText = await getResponseError(res);
+        throw new Error(errorText || "Failed to fetch blogs");
+      }
       const data = await res.json();
       setBlogs(data.blogs || []);
     } catch (error: Error) {
@@ -70,9 +74,12 @@ export default function Dashboard() {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        const errorText = await getResponseError(res);
+        throw new Error(errorText || "Failed to delete");
+      }
 
       setBlogs(blogs.filter((blog) => blog.id !== id));
       toast({
