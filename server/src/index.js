@@ -21,15 +21,8 @@ const blogRoutes = require('./routes/blogs');
 const app = express();
 app.use(express.json());
 
-const allowedOrigins = process.env.FRONTEND_ORIGIN
-    ? process.env.FRONTEND_ORIGIN
-        .split(',')
-        .map((origin) => origin.trim().replace(/\/+$/, ""))
-        .filter(Boolean)
-    : [];
-
 const corsOptions = {
-    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
