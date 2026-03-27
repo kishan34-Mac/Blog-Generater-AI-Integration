@@ -60,6 +60,9 @@ const start = async () => {
             ['MONGODB_URI', 'MONGO_URI', 'MONGO_URL', 'DATABASE_URL', 'JWT_SECRET', 'JWT_SECRET_KEY', 'SECRET', 'AUTH_SECRET'].includes(key),
         );
         console.error('Failed to start server', err);
+        if (err && err.name === 'MongooseServerSelectionError') {
+            console.error('MongoDB Atlas connection failed. Check your cluster IP access list / whitelist and make sure Render can connect. For testing, allow 0.0.0.0/0 in Atlas network access.');
+        }
         console.error('Available env keys:', knownKeys);
         process.exit(1);
     }

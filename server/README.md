@@ -44,7 +44,12 @@ If deploying to Render, use the `server` directory as the root for the service. 
 - `FRONTEND_ORIGIN` = your frontend live URL
 - `PORT` = `4000`
 
-Missing any of these values will cause the backend to exit with status `1` on startup.
+If your backend fails to connect to MongoDB Atlas, the most common cause is Atlas network access restrictions. In Atlas:
+
+- Add Render's outbound IP range to the cluster IP access list, or
+- For quick testing, add `0.0.0.0/0` as an allowed IP address
+
+Missing any of these values or ACL entries will cause the backend to exit with status `1` on startup.
 
 API endpoints
 
