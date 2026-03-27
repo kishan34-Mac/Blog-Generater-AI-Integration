@@ -1,0 +1,10 @@
+services:
+  - type: web_service
+    name: blog-gen-backend
+    env: node
+    plan: starter
+    branch: main
+    root: server
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true

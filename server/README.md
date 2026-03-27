@@ -30,6 +30,17 @@ Environment variables
 - PORT: Optional server port (default 4000)
 - FRONTEND_ORIGIN: Allowed origin for CORS (default http://localhost:5173)
 
+Render deployment notes
+
+If deploying to Render, use the `server` directory as the root for the service. Make sure these variables are configured in the Render dashboard:
+
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `FRONTEND_ORIGIN` = your frontend live URL
+- `PORT` = `4000`
+
+Missing any of these values will cause the backend to exit with status `1` on startup.
+
 API endpoints
 
 - POST /api/auth/signup => { email, password, fullName }
