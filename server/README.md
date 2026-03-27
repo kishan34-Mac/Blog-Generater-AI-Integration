@@ -32,8 +32,8 @@ Environment variables
 
 Alternate variable names supported:
 
-- `MONGO_URI` will also be accepted for MongoDB
-- `JWT_SECRET_KEY` or `SECRET` will also be accepted for JWT signing
+- `MONGODB_URI`, `MONGO_URI`, `MONGO_URL`, or `DATABASE_URL` will also be accepted for MongoDB
+- `JWT_SECRET`, `JWT_SECRET_KEY`, `SECRET`, or `AUTH_SECRET` will also be accepted for JWT signing
 
 Render deployment notes
 

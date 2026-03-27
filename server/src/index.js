@@ -17,11 +17,15 @@ app.use('/api/blogs', blogRoutes);
 
 const start = async () => {
     try {
-        const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-        const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY || process.env.SECRET;
+        const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.MONGO_URL || process.env.DATABASE_URL;
+        const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY || process.env.SECRET || process.env.AUTH_SECRET;
 
-        if (!mongoUri) throw new Error('MONGODB_URI or MONGO_URI is not set');
-        if (!jwtSecret) throw new Error('JWT_SECRET, JWT_SECRET_KEY, or SECRET is not set');
+        if (!mongoUri) {
+            throw new Error('Missing MongoDB URI. Set one of: MONGODB_URI, MONGO_URI, MONGO_URL, DATABASE_URL');
+        }
+        if (!jwtSecret) {
+            throw new Error('Missing JWT secret. Set one of: JWT_SECRET, JWT_SECRET_KEY, SECRET, AUTH_SECRET');
+        }
 
         await mongoose.connect(mongoUri, { dbName: 'blog-generator' });
         console.log('Connected to MongoDB Atlas');
@@ -29,7 +33,11 @@ const start = async () => {
         const port = process.env.PORT || 4000;
         app.listen(port, () => console.log(`Server listening on port ${port}`));
     } catch (err) {
+        const knownKeys = Object.keys(process.env).filter((key) =>
+            ['MONGODB_URI', 'MONGO_URI', 'MONGO_URL', 'DATABASE_URL', 'JWT_SECRET', 'JWT_SECRET_KEY', 'SECRET', 'AUTH_SECRET'].includes(key),
+        );
         console.error('Failed to start server', err);
+        console.error('Available env keys:', knownKeys);
         process.exit(1);
     }
 };
