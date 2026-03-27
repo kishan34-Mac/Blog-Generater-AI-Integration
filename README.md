@@ -36,6 +36,50 @@ npm i
 npm run dev
 ```
 
+### Backend server (MongoDB / Express)
+
+This project now includes a small Express backend for authentication and blog CRUD that uses MongoDB Atlas.
+
+Setup steps:
+
+1. Go into the `server` directory:
+
+```bash
+cd server
+```
+
+2. Create a `.env` file from the example and set your `MONGODB_URI` and `JWT_SECRET`:
+
+```bash
+cp .env.example .env
+# edit .env and fill in the values
+```
+
+3. Install and run the server in development:
+
+```bash
+npm install
+npm run dev
+```
+
+4. Add this line to the frontend `.env` file in the project root (or set it in your environment):
+
+```
+VITE_API_BASE="http://localhost:4000"
+```
+
+This backend exposes the following endpoints:
+
+- POST `/api/auth/signup` - create a new user
+- POST `/api/auth/login` - authenticate and receive a JWT
+- GET `/api/auth/me` - returns the current user for a valid token
+- GET `/api/blogs` - returns a user's blogs (protected)
+- POST `/api/blogs` - create a blog (protected)
+- GET `/api/blogs/:id` - get a specific blog (protected)
+- DELETE `/api/blogs/:id` - delete a blog (protected)
+
+If you want to use MongoDB Atlas in production, ensure you keep your `MONGODB_URI` and `JWT_SECRET` secure and configure CORS to match your real frontend host.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

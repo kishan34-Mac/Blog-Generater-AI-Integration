@@ -1,12 +1,27 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+// Using custom backend with MongoDB Atlas + JWT
+import { useToast } from "@/hooks/use-toast";
+
+interface AuthUser {
+  id: string;
+  email: string;
+  fullName: string;
+}
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  user: AuthUser | null;
+  token: string | null;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -15,51 +30,66 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // On mount: check token in localStorage and verify with backend
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const token = localStorage.getItem("bg_token");
+    if (!token) {
       setLoading(false);
-    });
+      return;
+    }
 
-    return () => subscription.unsubscribe();
+    fetch(
+      `${import.meta.env.VITE_API_BASE || "http://localhost:4000"}/api/auth/me`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Invalid token");
+        const data = await res.json();
+        setUser(data.user);
+        setToken(token);
+      })
+      .catch(() => {
+        localStorage.removeItem("bg_token");
+        setUser(null);
+        setToken(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE || "http://localhost:4000"
+        }/api/auth/signup`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, fullName }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to sign up");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("bg_token", data.token);
+      setToken(data.token);
+      setUser(data.user);
 
       toast({
         title: "Account created!",
         description: "Welcome to AI Blog Generator",
       });
-
       return { error: null };
     } catch (error) {
       const err = error as Error;
@@ -74,18 +104,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE || "http://localhost:4000"
+        }/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to sign in");
+      }
 
-      toast({
-        title: "Welcome back!",
-        description: "Successfully signed in",
-      });
+      const data = await response.json();
+      localStorage.setItem("bg_token", data.token);
+      setToken(data.token);
+      setUser(data.user);
 
+      toast({ title: "Welcome back!", description: "Successfully signed in" });
       return { error: null };
     } catch (error) {
       const err = error as Error;
@@ -99,26 +139,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      toast({
-        title: "Signed out",
-        description: "Come back soon!",
-      });
-    } catch (error) {
-      const err = error as Error;
-      toast({
-        title: "Error signing out",
-        description: err.message,
-        variant: "destructive",
-      });
-    }
+    localStorage.removeItem("bg_token");
+    setToken(null);
+    setUser(null);
+    toast({ title: "Signed out", description: "Come back soon!" });
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signUp, signIn, signOut, loading }}>
+    <AuthContext.Provider
+      value={{ user, token, signUp, signIn, signOut, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -127,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

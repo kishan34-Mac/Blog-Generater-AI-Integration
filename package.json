@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "dev:server": "cd server && npm run dev",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -41,6 +42,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/supabase-js": "^2.81.1",
     "@tanstack/react-query": "^5.90.9",
+    "caniuse-lite": "^1.0.30001757",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

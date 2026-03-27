@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, Calendar, Tag, Trash2, Eye } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+// Using custom backend API instead of Supabase
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Sparkles, Calendar, Tag, Trash2, Eye } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface Blog {
   id: string;
@@ -32,15 +38,18 @@ export default function Dashboard() {
 
   const fetchBlogs = async () => {
     try {
-      const { data, error } = await (supabase as any)
-        .from('blogs')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setBlogs(data || []);
+      const token = localStorage.getItem("bg_token");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE || "http://localhost:4000"}/api/blogs`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch blogs");
+      const data = await res.json();
+      setBlogs(data.blogs || []);
     } catch (error: Error) {
-      console.error('Error fetching blogs:', error);
+      console.error("Error fetching blogs:", error);
       toast({
         title: "Failed to load blogs",
         description: error.message,
@@ -53,14 +62,19 @@ export default function Dashboard() {
 
   const deleteBlog = async (id: string) => {
     try {
-      const { error } = await (supabase as any)
-        .from('blogs')
-        .delete()
-        .eq('id', id);
+      const token = localStorage.getItem("bg_token");
+      const res = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE || "http://localhost:4000"
+        }/api/blogs/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to delete");
 
-      if (error) throw error;
-
-      setBlogs(blogs.filter(blog => blog.id !== id));
+      setBlogs(blogs.filter((blog) => blog.id !== id));
       toast({
         title: "Blog deleted",
         description: "The blog has been removed from your dashboard",
@@ -90,12 +104,17 @@ export default function Dashboard() {
       <div className="container mx-auto max-w-7xl">
         <div className="flex justify-between items-center mb-12 animate-fade-in">
           <div>
-            <h1 className="text-5xl font-bold mb-4 gradient-text">Your Blogs</h1>
+            <h1 className="text-5xl font-bold mb-4 gradient-text">
+              Your Blogs
+            </h1>
             <p className="text-xl text-muted-foreground">
-              {blogs.length} {blogs.length === 1 ? 'blog' : 'blogs'} generated
+              {blogs.length} {blogs.length === 1 ? "blog" : "blogs"} generated
             </p>
           </div>
-          <Button asChild className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+          <Button
+            asChild
+            className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+          >
             <Link to="/generate" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               Generate New
@@ -111,7 +130,10 @@ export default function Dashboard() {
               <p className="text-muted-foreground mb-6">
                 Create your first AI-generated blog to get started
               </p>
-              <Button asChild className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+              <Button
+                asChild
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              >
                 <Link to="/generate">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Generate Your First Blog
@@ -132,17 +154,20 @@ export default function Dashboard() {
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {blog.keywords?.slice(0, 3).map((keyword, i) => (
-                      <span key={i} className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary flex items-center gap-1">
+                      <span
+                        key={i}
+                        className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary flex items-center gap-1"
+                      >
                         <Tag className="w-3 h-3" />
                         {keyword}
                       </span>
                     ))}
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {format(new Date(blog.created_at), 'MMM d, yyyy')}
+                      {format(new Date(blog.created_at), "MMM d, yyyy")}
                     </span>
                     <span className="capitalize px-2 py-1 rounded-full bg-accent/20 text-accent text-xs">
                       {blog.tone}
@@ -151,7 +176,10 @@ export default function Dashboard() {
 
                   <div className="flex gap-2 pt-2">
                     <Button asChild variant="outline" className="flex-1">
-                      <Link to={`/blog/${blog.id}`} className="flex items-center gap-2">
+                      <Link
+                        to={`/blog/${blog.id}`}
+                        className="flex items-center gap-2"
+                      >
                         <Eye className="w-4 h-4" />
                         View
                       </Link>

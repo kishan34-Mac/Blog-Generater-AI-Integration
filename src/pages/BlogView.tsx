@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Download, Calendar, Tag, Copy, Check } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import ReactMarkdown from 'react-markdown';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+// Using custom backend API for fetching blog
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Download, Calendar, Tag, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import ReactMarkdown from "react-markdown";
 
 interface Blog {
   id: string;
@@ -34,32 +34,42 @@ export default function BlogView() {
 
   const fetchBlog = async () => {
     try {
-      const { data, error } = await (supabase as any)
-        .from('blogs')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const token = localStorage.getItem("bg_token");
+      const res = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE || "http://localhost:4000"
+        }/api/blogs/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) {
+        const errBody = await res.json();
+        throw new Error(errBody.error || "Failed to fetch blog");
+      }
 
-      if (error) throw error;
+      const { blog: data } = await res.json();
+
       if (!data) {
         toast({
           title: "Blog not found",
           description: "The requested blog doesn't exist",
           variant: "destructive",
         });
-        navigate('/dashboard');
+        navigate("/dashboard");
         return;
       }
-      
+
       setBlog(data);
-    } catch (error: any) {
-      console.error('Error fetching blog:', error);
+    } catch (error: unknown) {
+      console.error("Error fetching blog:", error);
+      const message = error instanceof Error ? error.message : String(error);
       toast({
         title: "Failed to load blog",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
-      navigate('/dashboard');
+      navigate("/dashboard");
     } finally {
       setLoading(false);
     }
@@ -67,7 +77,7 @@ export default function BlogView() {
 
   const copyToClipboard = async () => {
     if (!blog) return;
-    
+
     const text = `${blog.title}\n\n${blog.meta_description}\n\n${blog.content}`;
     await navigator.clipboard.writeText(text);
     setCopied(true);
@@ -81,12 +91,14 @@ export default function BlogView() {
   const downloadAsMarkdown = () => {
     if (!blog) return;
 
-    const markdown = `# ${blog.title}\n\n**Meta Description:** ${blog.meta_description}\n\n**Keywords:** ${blog.keywords.join(', ')}\n\n---\n\n${blog.content}`;
-    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const markdown = `# ${blog.title}\n\n**Meta Description:** ${
+      blog.meta_description
+    }\n\n**Keywords:** ${blog.keywords.join(", ")}\n\n---\n\n${blog.content}`;
+    const blob = new Blob([markdown], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${blog.title.toLowerCase().replace(/\s+/g, '-')}.md`;
+    a.download = `${blog.title.toLowerCase().replace(/\s+/g, "-")}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -116,7 +128,7 @@ export default function BlogView() {
       <div className="container mx-auto max-w-4xl">
         <Button
           variant="ghost"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -127,12 +139,19 @@ export default function BlogView() {
           <CardContent className="p-8 space-y-6">
             {/* Header */}
             <div className="space-y-4">
-              <h1 className="text-5xl font-heading font-bold gradient-text leading-tight">{blog.title}</h1>
-              <p className="text-xl text-foreground/80 font-body leading-relaxed">{blog.meta_description}</p>
-              
+              <h1 className="text-5xl font-heading font-bold gradient-text leading-tight">
+                {blog.title}
+              </h1>
+              <p className="text-xl text-foreground/80 font-body leading-relaxed">
+                {blog.meta_description}
+              </p>
+
               <div className="flex flex-wrap gap-2">
                 {blog.keywords.map((keyword, i) => (
-                  <span key={i} className="px-3 py-1 text-sm rounded-full bg-primary/20 text-primary flex items-center gap-1">
+                  <span
+                    key={i}
+                    className="px-3 py-1 text-sm rounded-full bg-primary/20 text-primary flex items-center gap-1"
+                  >
                     <Tag className="w-3 h-3" />
                     {keyword}
                   </span>
@@ -142,7 +161,7 @@ export default function BlogView() {
               <div className="flex items-center gap-6 text-sm text-muted-foreground pt-4 border-t border-border">
                 <span className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  {format(new Date(blog.created_at), 'MMMM d, yyyy')}
+                  {format(new Date(blog.created_at), "MMMM d, yyyy")}
                 </span>
                 <span className="capitalize px-3 py-1 rounded-full bg-accent/20 text-accent">
                   {blog.tone}
@@ -182,7 +201,8 @@ export default function BlogView() {
 
             {/* Content */}
             <div className="pt-6 border-t border-border">
-              <div className="prose prose-invert prose-lg max-w-none font-body
+              <div
+                className="prose prose-invert prose-lg max-w-none font-body
                 prose-headings:font-heading
                 prose-h2:text-4xl prose-h2:font-bold prose-h2:mb-6 prose-h2:mt-10 
                 prose-h2:bg-gradient-to-r prose-h2:from-primary prose-h2:via-accent prose-h2:to-primary 
@@ -196,7 +216,8 @@ export default function BlogView() {
                 prose-ul:my-6 prose-li:text-foreground/80 prose-li:mb-2
                 prose-ol:my-6 prose-ol:text-foreground/80
                 prose-blockquote:border-l-4 prose-blockquote:border-accent 
-                prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground">
+                prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground"
+              >
                 <ReactMarkdown>{blog.content}</ReactMarkdown>
               </div>
             </div>
