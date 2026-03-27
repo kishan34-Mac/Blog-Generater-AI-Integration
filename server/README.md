@@ -30,6 +30,11 @@ Environment variables
 - PORT: Optional server port (default 4000)
 - FRONTEND_ORIGIN: Allowed origin for CORS (default http://localhost:5173)
 
+Alternate variable names supported:
+
+- `MONGO_URI` will also be accepted for MongoDB
+- `JWT_SECRET_KEY` or `SECRET` will also be accepted for JWT signing
+
 Render deployment notes
 
 If deploying to Render, use the `server` directory as the root for the service. Make sure these variables are configured in the Render dashboard:
