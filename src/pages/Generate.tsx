@@ -72,12 +72,23 @@ export default function Generate() {
     setGeneratedBlog(null);
 
     try {
-      const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || "")
+      const rawSupabaseUrl = (import.meta.env.VITE_SUPABASE_URL || "").trim();
+      const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID || "").trim();
+      const computedUrl = projectId ? `https://${projectId}.supabase.co` : "";
+      const supabaseUrl = (rawSupabaseUrl || computedUrl)
         .trim()
         .replace(/\/+$/, "");
-      if (!supabaseUrl) {
+      const publishableKey = (
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ""
+      ).trim();
+      if (!supabaseUrl || supabaseUrl === "https://undefined.supabase.co") {
         throw new Error(
-          "Supabase function URL is not configured. Set VITE_SUPABASE_URL.",
+          "Supabase function URL is not configured. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID.",
+        );
+      }
+      if (!publishableKey) {
+        throw new Error(
+          "Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.",
         );
       }
 
@@ -87,7 +98,7 @@ export default function Generate() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${publishableKey}`,
           },
           body: JSON.stringify({ topic, tone, wordCount }),
         },
