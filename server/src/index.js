@@ -29,22 +29,11 @@ const allowedOrigins = process.env.FRONTEND_ORIGIN
     : [];
 
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (!origin) {
-            return callback(null, true);
-        }
-
-        const normalizedOrigin = origin.replace(/\/+$/, "");
-        if (allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
-            return callback(null, true);
-        }
-
-        console.warn('Blocked CORS origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-    },
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
