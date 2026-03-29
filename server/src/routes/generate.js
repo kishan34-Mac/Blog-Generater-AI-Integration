@@ -27,9 +27,50 @@ const countWords = (text) => {
         .filter(Boolean).length;
 };
 
+const chooseEmoji = (tone) => {
+    const emojiMap = {
+        professional: '💼',
+        casual: '😎',
+        informative: '📘',
+        creative: '🎨',
+        persuasive: '🔥',
+    };
+    return emojiMap[tone] || '✨';
+};
+
+const trimTextToWordCount = (text, targetCount) => {
+    if (!text || targetCount <= 0) {
+        return '';
+    }
+
+    const tokens = text.split(/(\s+)/);
+    let currentCount = 0;
+    let result = '';
+
+    for (const token of tokens) {
+        if (/\S/.test(token)) {
+            currentCount += 1;
+        }
+
+        if (currentCount > targetCount) {
+            break;
+        }
+
+        result += token;
+    }
+
+    result = result.trim();
+    if (currentCount > targetCount && !/[.!?]$/.test(result)) {
+        result += '.';
+    }
+
+    return result;
+};
+
 const buildDummyBlog = (topic, tone, wordCount) => {
     const normalizedTone = tone || 'professional';
-    const title = `${topic} | AI Blog Generator`;
+    const emoji = chooseEmoji(normalizedTone);
+    const title = `${emoji} ${topic} | AI Blog Generator`;
     const intro = `## Introduction\n\n${topic} is an important topic in today’s world. This article explains why it matters and how it can impact your audience.`;
     const sections = [
         `## Why ${topic} Matters\n\nWriting about ${topic} helps people understand its value in a practical way. Use this content to educate and inspire.`,
@@ -51,8 +92,11 @@ const buildDummyBlog = (topic, tone, wordCount) => {
         content += `\n\n${nextSentence}`;
     }
 
+    content = trimTextToWordCount(content, wordCount);
+
     return {
         title,
+        emoji,
         meta_description: `A ${wordCount}-word article about ${topic} in a ${normalizedTone} tone.`,
         keywords: [topic, normalizedTone, 'blog writing', 'content marketing'],
         content,
@@ -113,6 +157,7 @@ router.post('/', async (req, res) => {
             if (parsed && parsed.title && parsed.content) {
                 return res.json({
                     title: parsed.title,
+                    emoji: parsed.emoji || chooseEmoji(normalizedTone),
                     meta_description: parsed.meta_description || parsed.description || `A generated article about ${topic}`,
                     keywords: parsed.keywords || [],
                     content: parsed.content,
@@ -121,6 +166,7 @@ router.post('/', async (req, res) => {
 
             return res.json({
                 title: `Blog about ${topic}`,
+                emoji: chooseEmoji(normalizedTone),
                 meta_description: `A generated blog post about ${topic}.`,
                 keywords: [],
                 content: content || `A blog post about ${topic}.`,

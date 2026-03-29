@@ -12,6 +12,7 @@ const cleanGeneratedContent = (content: string) =>
 
 interface GeneratedBlogData {
   title: string;
+  emoji?: string;
   meta_description: string;
   content: string;
   keywords?: string[];
@@ -94,6 +95,7 @@ export default function Generate() {
       const data = await response.json();
       const blogData: GeneratedBlogData = {
         title: data.title || `Blog about ${topic}`,
+        emoji: data.emoji || "✨",
         meta_description:
           data.meta_description || `Generated blog about ${topic}`,
         keywords: data.keywords || [],
@@ -356,44 +358,44 @@ export default function Generate() {
               </div>
               {generatedBlog && (
                 <div className="flex flex-wrap gap-2">
-                    <Button
-                      onClick={handleEdit}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Edit className="w-4 h-4" />
-                      {isEditing ? "Save" : "Edit"}
-                    </Button>
-                    <Button
-                      onClick={handleCopy}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={handleDownload}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download
-                    </Button>
-                  </div>
-                )}
+                  <Button
+                    onClick={handleEdit}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    {isEditing ? "Save" : "Edit"}
+                  </Button>
+                  <Button
+                    onClick={handleCopy}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleDownload}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="bg-slate-950/10 border border-slate-800/60 rounded-3xl p-6 min-h-[420px]">
               {generating ? (
@@ -405,9 +407,14 @@ export default function Generate() {
               ) : generatedBlog ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-heading font-bold gradient-text">
-                      {generatedBlog.title}
-                    </h3>
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">
+                        {generatedBlog.emoji || "✨"}
+                      </span>
+                      <h3 className="text-2xl font-heading font-bold gradient-text">
+                        {generatedBlog.title}
+                      </h3>
+                    </div>
                     <p className="text-sm text-foreground/80">
                       {generatedBlog.meta_description}
                     </p>
