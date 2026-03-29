@@ -27,9 +27,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ FIXED CORS (IMPORTANT)
-const allowedOrigin =
+const allowedOrigin = (
     process.env.FRONTEND_ORIGIN ||
-    "https://blog-generater-ai-integration.vercel.app";
+    "https://blog-generater-ai-integration.vercel.app"
+)
+    .trim()
+    .replace(/\/+$|\s+$/g, "");
 
 app.use(cors({
     origin: allowedOrigin,
