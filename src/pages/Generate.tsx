@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // Not using Supabase database anymore - saving via our API
-import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, getResponseError } from "@/lib/utils";
+
+const cleanGeneratedContent = (content: string) =>
+  content
+    .replace(/\\n\\n/g, "\n\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t")
+    .trim();
 
 interface GeneratedBlogData {
   title: string;
@@ -52,7 +58,6 @@ export default function Generate() {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -92,7 +97,7 @@ export default function Generate() {
         meta_description:
           data.meta_description || `Generated blog about ${topic}`,
         keywords: data.keywords || [],
-        content: data.content || data.blog || "",
+        content: cleanGeneratedContent(data.content || data.blog || ""),
       };
 
       setGeneratedBlog(blogData);
@@ -332,16 +337,25 @@ export default function Generate() {
 
           {/* Preview */}
           <Card className="glass-card border-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle>Live Preview</CardTitle>
                   <CardDescription>
-                    Watch your blog come to life
+                    Watch your blog come to life with a polished preview.
                   </CardDescription>
                 </div>
-                {generatedBlog && (
-                  <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {tone} tone
+                  </span>
+                  <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                    {wordCount} words
+                  </span>
+                </div>
+              </div>
+              {generatedBlog && (
+                <div className="flex flex-wrap gap-2">
                     <Button
                       onClick={handleEdit}
                       variant="outline"
@@ -380,9 +394,8 @@ export default function Generate() {
                     </Button>
                   </div>
                 )}
-              </div>
             </CardHeader>
-            <CardContent className="bg-background/30 rounded-lg p-6 min-h-[400px]">
+            <CardContent className="bg-slate-950/10 border border-slate-800/60 rounded-3xl p-6 min-h-[420px]">
               {generating ? (
                 <div className="prose prose-invert max-w-none">
                   <div className="text-sm text-muted-foreground">
@@ -420,13 +433,10 @@ export default function Generate() {
                     />
                   ) : (
                     <div
-                      className="prose prose-invert prose-sm max-w-none font-body
+                      className="prose prose-slate prose-sm max-w-none font-body rounded-3xl bg-slate-950/10 p-6 shadow-inner
                       prose-headings:font-heading
                       prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-4 prose-h2:mt-6
-                      prose-h2:bg-gradient-to-r prose-h2:from-primary prose-h2:via-accent prose-h2:to-primary 
-                      prose-h2:bg-clip-text prose-h2:text-transparent
                       prose-h3:text-lg prose-h3:font-semibold prose-h3:mb-3 prose-h3:mt-4
-                      prose-h3:text-accent
                       prose-p:text-foreground/80 prose-p:text-sm prose-p:mb-3
                       prose-strong:text-primary prose-strong:font-semibold prose-strong:bg-primary/10 prose-strong:px-1 prose-strong:rounded
                       prose-ul:text-sm prose-li:text-foreground/70 prose-li:mb-1"

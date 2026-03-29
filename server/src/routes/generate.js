@@ -20,13 +20,42 @@ const parseJsonFromText = (text) => {
     }
 };
 
+const countWords = (text) => {
+    return text
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
+};
+
 const buildDummyBlog = (topic, tone, wordCount) => {
+    const normalizedTone = tone || 'professional';
     const title = `${topic} | AI Blog Generator`;
+    const intro = `## Introduction\n\n${topic} is an important topic in today’s world. This article explains why it matters and how it can impact your audience.`;
+    const sections = [
+        `## Why ${topic} Matters\n\nWriting about ${topic} helps people understand its value in a practical way. Use this content to educate and inspire.`,
+        `## Practical Applications\n\nThere are many practical applications for ${topic}, especially when the goal is to make content more helpful and engaging for readers.`,
+        `## Common Challenges\n\nPeople often struggle with ${topic} because it can feel abstract or difficult to apply in everyday scenarios. This section breaks down the key hurdles.`,
+        `## Final Thoughts\n\nA thoughtful approach to ${topic} delivers real value. This generated blog can be adapted and expanded into a full article or guide.`,
+    ];
+    const fillerSentences = [
+        `This section expands on the topic with useful examples, keeping the tone ${normalizedTone} and easy to follow.`,
+        `Use clear language and practical ideas to keep the reader engaged and informed about ${topic}.`,
+        `The writing stays focused and helpful, providing actionable insights without unnecessary fluff.`,
+        `Readers gain a fresh perspective on ${topic} through concise explanations and relevant examples.`,
+    ];
+
+    let content = [intro, ...sections].join("\n\n");
+
+    while (countWords(content) < wordCount) {
+        const nextSentence = fillerSentences[Math.floor(Math.random() * fillerSentences.length)];
+        content += `\n\n${nextSentence}`;
+    }
+
     return {
         title,
-        meta_description: `A generated article about ${topic} in a ${tone || 'professional'} tone.`,
-        keywords: [topic, tone || 'professional', 'blog writing', 'content marketing'],
-        content: `## Introduction\\n\\n${topic} is an important topic in today’s world. This article explains why it matters and how it can impact your audience.\\n\\n## Why ${topic} Matters\\n\\nWriting about ${topic} helps people understand its value in a practical way. Use this content to educate and inspire.\\n\\n## Main Takeaways\\n\\n- Focus on clarity and structure.\\n- Keep your sentences concise.\\n- Use examples when possible.\\n\\n## Conclusion\\n\\nIn conclusion, ${topic} is a powerful subject that deserves attention. This generated blog can be used as a starting point for your final article.`,
+        meta_description: `A ${wordCount}-word article about ${topic} in a ${normalizedTone} tone.`,
+        keywords: [topic, normalizedTone, 'blog writing', 'content marketing'],
+        content,
     };
 };
 
