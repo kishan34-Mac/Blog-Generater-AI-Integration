@@ -86,9 +86,15 @@ const buildDummyBlog = (topic, tone, wordCount) => {
     ];
 
     let content = [intro, ...sections].join("\n\n");
+    const availableSentences = [...fillerSentences];
 
     while (countWords(content) < wordCount) {
-        const nextSentence = fillerSentences[Math.floor(Math.random() * fillerSentences.length)];
+        if (availableSentences.length === 0) {
+            availableSentences.push(...fillerSentences);
+        }
+
+        const index = Math.floor(Math.random() * availableSentences.length);
+        const nextSentence = availableSentences.splice(index, 1)[0];
         content += `\n\n${nextSentence}`;
     }
 
