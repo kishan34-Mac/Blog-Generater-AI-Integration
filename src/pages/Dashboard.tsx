@@ -91,7 +91,10 @@ export default function Dashboard() {
     }
   };
 
-  const totalWords = blogs.reduce((sum, blog) => sum + (blog.word_count || 0), 0);
+  const totalWords = blogs.reduce(
+    (sum, blog) => sum + (blog.word_count || 0),
+    0,
+  );
   const tagsCount = new Set(blogs.flatMap((blog) => blog.keywords || [])).size;
 
   if (loading) {
@@ -118,7 +121,8 @@ export default function Dashboard() {
                 Welcome back, {user?.fullName || "Creator"}
               </h1>
               <p className="mt-4 max-w-2xl text-base text-white/80">
-                Your content hub is ready. Create, review, and manage your AI blogs from one polished workspace.
+                Your content hub is ready. Create, review, and manage your AI
+                blogs from one polished workspace.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -144,19 +148,37 @@ export default function Dashboard() {
 
         <div className="grid gap-6 md:grid-cols-3 mb-10">
           <div className="rounded-3xl border border-white/20 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-            <p className="text-sm uppercase tracking-[0.4em] text-slate-500 mb-3">Total blogs</p>
-            <h2 className="text-4xl font-semibold text-slate-900">{blogs.length}</h2>
-            <p className="text-sm text-slate-500 mt-2">AI blogs created so far.</p>
+            <p className="text-sm uppercase tracking-[0.4em] text-slate-500 mb-3">
+              Total blogs
+            </p>
+            <h2 className="text-4xl font-semibold text-slate-900">
+              {blogs.length}
+            </h2>
+            <p className="text-sm text-slate-500 mt-2">
+              AI blogs created so far.
+            </p>
           </div>
           <div className="rounded-3xl border border-white/20 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-            <p className="text-sm uppercase tracking-[0.4em] text-slate-500 mb-3">Total words</p>
-            <h2 className="text-4xl font-semibold text-slate-900">{totalWords}</h2>
-            <p className="text-sm text-slate-500 mt-2">Words written across your collection.</p>
+            <p className="text-sm uppercase tracking-[0.4em] text-slate-500 mb-3">
+              Total words
+            </p>
+            <h2 className="text-4xl font-semibold text-slate-900">
+              {totalWords}
+            </h2>
+            <p className="text-sm text-slate-500 mt-2">
+              Words written across your collection.
+            </p>
           </div>
           <div className="rounded-3xl border border-white/20 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-            <p className="text-sm uppercase tracking-[0.4em] text-slate-500 mb-3">Unique tags</p>
-            <h2 className="text-4xl font-semibold text-slate-900">{tagsCount}</h2>
-            <p className="text-sm text-slate-500 mt-2">Different keyword bundles used.</p>
+            <p className="text-sm uppercase tracking-[0.4em] text-slate-500 mb-3">
+              Unique tags
+            </p>
+            <h2 className="text-4xl font-semibold text-slate-900">
+              {tagsCount}
+            </h2>
+            <p className="text-sm text-slate-500 mt-2">
+              Different keyword bundles used.
+            </p>
           </div>
         </div>
 
