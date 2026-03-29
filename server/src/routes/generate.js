@@ -4,19 +4,38 @@ const { Readable } = require('stream');
 const router = express.Router();
 
 const getSupabaseUrl = () => {
-    return (
+    const rawUrl = (
         process.env.SUPABASE_URL ||
         process.env.VITE_SUPABASE_URL ||
         process.env.SUPABASE_PROJECT_URL ||
+        process.env.VITE_SUPABASE_PROJECT_URL ||
         ''
-    ).trim().replace(/\/+$/, '');
+    ).trim();
+
+    const projectId = (
+        process.env.SUPABASE_PROJECT_ID ||
+        process.env.VITE_SUPABASE_PROJECT_ID ||
+        ''
+    ).trim();
+
+    if (rawUrl) {
+        return rawUrl.replace(/\/+$/, '');
+    }
+
+    if (projectId) {
+        return `https://${projectId}.supabase.co`;
+    }
+
+    return '';
 };
 
 const getSupabaseKey = () => {
     return (
         process.env.SUPABASE_PUBLISHABLE_KEY ||
         process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
         process.env.SUPABASE_SERVICE_KEY ||
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
         process.env.VITE_SUPABASE_KEY ||
         ''
     ).trim();
