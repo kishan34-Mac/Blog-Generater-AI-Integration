@@ -263,7 +263,7 @@ export default function Dashboard() {
                       variant="destructive"
                       size="icon"
                       onClick={() => deleteBlog(blog.id)}
-                      className="border-destructive text-destructive hover:bg-destructive/10"
+                      className="text-white shadow-lg shadow-destructive/20 hover:bg-destructive/90"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
