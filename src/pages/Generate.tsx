@@ -84,7 +84,6 @@ export default function Generate() {
       const apiBase = (import.meta.env.VITE_API_BASE || "")
         .trim()
         .replace(/\/+$/, "");
-      const useProxy = Boolean(apiBase);
       const payload = { topic, tone, wordCount };
       let response: Response | null = null;
 
@@ -97,8 +96,13 @@ export default function Generate() {
         return `${supabaseUrl}/functions/v1/generate-blog`;
       };
 
-      const fetchFromProxy = async () => {
-        const response = await fetch(`${apiBase}/api/generate`, {
+      const proxyTargets = [
+        ...(apiBase ? [`${apiBase}/api/generate`] : []),
+        "/api/generate",
+      ];
+
+      const fetchProxy = async (url: string) => {
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -144,19 +148,33 @@ export default function Generate() {
         return response;
       };
 
-      if (useProxy) {
+      for (const url of proxyTargets) {
         try {
-          response = await fetchFromProxy();
+          response = await fetchProxy(url);
+          break;
         } catch (proxyError) {
-          console.warn(
-            "Proxy generate request failed, falling back to Supabase directly.",
-            proxyError,
-          );
+          console.warn(`Proxy generate request failed for ${url}.`, proxyError);
+          response = null;
         }
       }
 
       if (!response) {
-        response = await fetchFromSupabase();
+        try {
+          response = await fetchFromSupabase();
+        } catch (supabaseError) {
+          console.error("Supabase fallback failed:", supabaseError);
+          if (
+            supabaseError instanceof Error &&
+            supabaseError.message.includes(
+              "Supabase function URL is not configured",
+            )
+          ) {
+            throw new Error(
+              "Blog generation is not available: configure VITE_API_BASE for your backend or VITE_SUPABASE_URL/VITE_SUPABASE_PROJECT_ID for direct Supabase access.",
+            );
+          }
+          throw supabaseError;
+        }
       }
 
       if (!response.ok) {
