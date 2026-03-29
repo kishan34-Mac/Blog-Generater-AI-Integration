@@ -75,9 +75,18 @@ export default function Generate() {
       const rawSupabaseUrl = (
         import.meta.env.VITE_SUPABASE_URL ||
         import.meta.env.VITE_SUPABASE_PROJECT_URL ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ||
+        import.meta.env.PUBLIC_SUPABASE_URL ||
+        import.meta.env.PUBLIC_SUPABASE_PROJECT_URL ||
         ""
       ).trim();
-      const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID || "").trim();
+      const projectId = (
+        import.meta.env.VITE_SUPABASE_PROJECT_ID ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID ||
+        import.meta.env.PUBLIC_SUPABASE_PROJECT_ID ||
+        ""
+      ).trim();
       const computedUrl = projectId ? `https://${projectId}.supabase.co` : "";
       const supabaseUrl = (rawSupabaseUrl || computedUrl)
         .trim()
@@ -88,6 +97,16 @@ export default function Generate() {
         import.meta.env.VITE_SUPABASE_ANON_KEY ||
         import.meta.env.VITE_SUPABASE_SERVICE_KEY ||
         import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_KEY ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY ||
+        import.meta.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
+        import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        import.meta.env.PUBLIC_SUPABASE_KEY ||
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+        import.meta.env.PUBLIC_SUPABASE_SERVICE_KEY ||
+        import.meta.env.PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
         ""
       ).trim();
       const apiBaseCandidates = getApiBaseList();
