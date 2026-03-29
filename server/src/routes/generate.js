@@ -83,9 +83,18 @@ const buildDummyBlog = (topic, tone, wordCount) => {
         `Use clear language and practical ideas to keep the reader engaged and informed about ${topic}.`,
         `The writing stays focused and helpful, providing actionable insights without unnecessary fluff.`,
         `Readers gain a fresh perspective on ${topic} through concise explanations and relevant examples.`,
+        `A strong example shows how ${topic} can be used in real-world scenarios.`,
+        `This paragraph keeps the ideas practical and grounded in familiar use cases.`,
+        `It highlights what matters most when readers are deciding how to apply this topic.`,
+        `The tone remains professional while still being easy to read and understand.`,
+        `Each point is designed to help readers take the next step with confidence.`,
+        `Practical details make the topic feel much more accessible and relevant.`,
+        `The paragraph stays on point and avoids repetition while adding new value.`,
+        `It presents a helpful insight that can change how readers think about ${topic}.`,
     ];
 
     let content = [intro, ...sections].join("\n\n");
+    let lastSentence = '';
     const availableSentences = [...fillerSentences];
 
     while (countWords(content) < wordCount) {
@@ -93,9 +102,20 @@ const buildDummyBlog = (topic, tone, wordCount) => {
             availableSentences.push(...fillerSentences);
         }
 
-        const index = Math.floor(Math.random() * availableSentences.length);
-        const nextSentence = availableSentences.splice(index, 1)[0];
+        let nextIndex = Math.floor(Math.random() * availableSentences.length);
+        let nextSentence = availableSentences[nextIndex];
+
+        if (nextSentence === lastSentence && availableSentences.length > 1) {
+            const otherIndexes = availableSentences
+                .map((_, idx) => idx)
+                .filter((idx) => availableSentences[idx] !== lastSentence);
+            nextIndex = otherIndexes[Math.floor(Math.random() * otherIndexes.length)];
+            nextSentence = availableSentences[nextIndex];
+        }
+
+        availableSentences.splice(nextIndex, 1);
         content += `\n\n${nextSentence}`;
+        lastSentence = nextSentence;
     }
 
     content = trimTextToWordCount(content, wordCount);
