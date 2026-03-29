@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(null);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [API_BASE]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {

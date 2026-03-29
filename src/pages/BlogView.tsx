@@ -30,46 +30,46 @@ export default function BlogView() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchBlog();
-  }, [id]);
+    const fetchBlog = async () => {
+      try {
+        const token = localStorage.getItem("bg_token");
+        const res = await fetch(`${getApiBase()}/api/blogs/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          const errorText = await getResponseError(res);
+          throw new Error(errorText || "Failed to fetch blog");
+        }
 
-  const fetchBlog = async () => {
-    try {
-      const token = localStorage.getItem("bg_token");
-      const res = await fetch(`${getApiBase()}/api/blogs/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const errorText = await getResponseError(res);
-        throw new Error(errorText || "Failed to fetch blog");
-      }
+        const { blog: data } = await res.json();
 
-      const { blog: data } = await res.json();
+        if (!data) {
+          toast({
+            title: "Blog not found",
+            description: "The requested blog doesn't exist",
+            variant: "destructive",
+          });
+          navigate("/dashboard");
+          return;
+        }
 
-      if (!data) {
+        setBlog(data);
+      } catch (error: unknown) {
+        console.error("Error fetching blog:", error);
+        const message = error instanceof Error ? error.message : String(error);
         toast({
-          title: "Blog not found",
-          description: "The requested blog doesn't exist",
+          title: "Failed to load blog",
+          description: message,
           variant: "destructive",
         });
         navigate("/dashboard");
-        return;
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setBlog(data);
-    } catch (error: unknown) {
-      console.error("Error fetching blog:", error);
-      const message = error instanceof Error ? error.message : String(error);
-      toast({
-        title: "Failed to load blog",
-        description: message,
-        variant: "destructive",
-      });
-      navigate("/dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchBlog();
+  }, [id, navigate, toast]);
 
   const copyToClipboard = async () => {
     if (!blog) return;

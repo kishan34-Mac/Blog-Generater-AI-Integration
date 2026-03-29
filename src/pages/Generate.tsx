@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 // Not using Supabase database anymore - saving via our API
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, getResponseError } from "@/lib/utils";

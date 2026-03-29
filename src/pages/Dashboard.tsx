@@ -34,32 +34,32 @@ export default function Dashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchBlogs();
-  }, [user]);
-
-  const fetchBlogs = async () => {
-    try {
-      const token = localStorage.getItem("bg_token");
-      const res = await fetch(`${getApiBase()}/api/blogs`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const errorText = await getResponseError(res);
-        throw new Error(errorText || "Failed to fetch blogs");
+    const fetchBlogs = async () => {
+      try {
+        const token = localStorage.getItem("bg_token");
+        const res = await fetch(`${getApiBase()}/api/blogs`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          const errorText = await getResponseError(res);
+          throw new Error(errorText || "Failed to fetch blogs");
+        }
+        const data = await res.json();
+        setBlogs(data.blogs || []);
+      } catch (error: Error) {
+        console.error("Error fetching blogs:", error);
+        toast({
+          title: "Failed to load blogs",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      const data = await res.json();
-      setBlogs(data.blogs || []);
-    } catch (error: Error) {
-      console.error("Error fetching blogs:", error);
-      toast({
-        title: "Failed to load blogs",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchBlogs();
+  }, [user, toast]);
 
   const deleteBlog = async (id: string) => {
     try {
