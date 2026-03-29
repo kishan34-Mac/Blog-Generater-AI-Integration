@@ -38,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const API_BASE = getApiBase();
 
+  const clearSession = () => {
+    localStorage.removeItem("bg_token");
+    setToken(null);
+    setUser(null);
+  };
+
   // On mount: check token in localStorage and verify with backend
   useEffect(() => {
     const token = localStorage.getItem("bg_token");
@@ -129,11 +135,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    localStorage.removeItem("bg_token");
-    setToken(null);
-    setUser(null);
+    clearSession();
     toast({ title: "Signed out", description: "Come back soon!" });
   };
+
+  useEffect(() => {
+    const handleUnload = () => {
+      localStorage.removeItem("bg_token");
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, []);
 
   return (
     <AuthContext.Provider
