@@ -42,8 +42,11 @@ export default function BlogView() {
         }
 
         const { blog: data } = await res.json();
+        const normalizedBlog = data
+          ? { ...data, id: data.id || data._id }
+          : null;
 
-        if (!data) {
+        if (!normalizedBlog) {
           toast({
             title: "Blog not found",
             description: "The requested blog doesn't exist",
@@ -53,7 +56,7 @@ export default function BlogView() {
           return;
         }
 
-        setBlog(data);
+        setBlog(normalizedBlog);
       } catch (error: unknown) {
         console.error("Error fetching blog:", error);
         const message = error instanceof Error ? error.message : String(error);

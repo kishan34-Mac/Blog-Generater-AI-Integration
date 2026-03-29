@@ -45,7 +45,11 @@ export default function Dashboard() {
           throw new Error(errorText || "Failed to fetch blogs");
         }
         const data = await res.json();
-        setBlogs(data.blogs || []);
+        const normalizedBlogs = (data.blogs || []).map((blog: any) => ({
+          ...blog,
+          id: blog.id || blog._id,
+        }));
+        setBlogs(normalizedBlogs);
       } catch (error: Error) {
         console.error("Error fetching blogs:", error);
         toast({
