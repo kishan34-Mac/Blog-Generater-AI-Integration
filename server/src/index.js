@@ -27,17 +27,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ FIXED CORS (IMPORTANT)
-const allowedOrigin = (
-    process.env.FRONTEND_ORIGIN ||
-    "https://blog-generater-ai-integration.vercel.app"
-)
-    .trim()
-    .replace(/\/+$|\s+$/g, "");
+const normalizeOrigin = (value) => {
+    if (!value || typeof value !== 'string') return null;
+    let origin = value.trim().replace(/\/+$/, '');
+    if (!origin.match(/^https?:\/\//i)) {
+        origin = `https://${origin}`;
+    }
+    return origin;
+};
+
+const rawFrontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blog-generater-ai-integration.vercel.app';
+const allowedOrigin = normalizeOrigin(rawFrontendOrigin);
+const allowedOrigins = [allowedOrigin].filter(Boolean);
 
 app.use(cors({
-    origin: allowedOrigin,
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 200,
 }));
 
 // ✅ Routes
