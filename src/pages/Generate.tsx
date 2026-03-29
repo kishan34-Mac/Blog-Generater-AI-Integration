@@ -397,7 +397,7 @@ export default function Generate() {
                 </div>
               )}
             </CardHeader>
-            <CardContent className="bg-slate-950/10 border border-slate-800/60 rounded-3xl p-6 min-h-[420px]">
+            <CardContent className="bg-slate-950/10 border border-slate-800/60 rounded-3xl p-6 min-h-[420px] overflow-hidden">
               {generating ? (
                 <div className="prose prose-invert max-w-none">
                   <div className="text-sm text-muted-foreground">
@@ -405,7 +405,7 @@ export default function Generate() {
                   </div>
                 </div>
               ) : generatedBlog ? (
-                <div className="space-y-4">
+                <div className="space-y-4 h-full">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <span className="text-4xl">
@@ -432,25 +432,27 @@ export default function Generate() {
                     </div>
                   </div>
 
-                  {isEditing ? (
-                    <textarea
-                      value={editedContent}
-                      onChange={(e) => setEditedContent(e.target.value)}
-                      className="w-full min-h-[400px] p-4 bg-background/50 rounded-lg border border-border text-sm font-body text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  ) : (
-                    <div
-                      className="prose prose-slate prose-sm max-w-none font-body rounded-3xl bg-slate-950/10 p-6 shadow-inner
-                      prose-headings:font-heading
-                      prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-4 prose-h2:mt-6
-                      prose-h3:text-lg prose-h3:font-semibold prose-h3:mb-3 prose-h3:mt-4
-                      prose-p:text-foreground/80 prose-p:text-sm prose-p:mb-3
-                      prose-strong:text-primary prose-strong:font-semibold prose-strong:bg-primary/10 prose-strong:px-1 prose-strong:rounded
-                      prose-ul:text-sm prose-li:text-foreground/70 prose-li:mb-1"
-                    >
-                      <ReactMarkdown>{editedContent}</ReactMarkdown>
-                    </div>
-                  )}
+                  <div className="max-h-[420px] overflow-y-auto space-y-6 pr-2">
+                    {isEditing ? (
+                      <textarea
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className="w-full min-h-[400px] p-4 bg-background/50 rounded-lg border border-border text-sm font-body text-foreground/80 focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    ) : (
+                      <div
+                        className="prose prose-slate prose-sm max-w-none font-body rounded-3xl bg-slate-950/10 p-6 shadow-inner
+                        prose-headings:font-heading
+                        prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-4 prose-h2:mt-6
+                        prose-h3:text-lg prose-h3:font-semibold prose-h3:mb-3 prose-h3:mt-4
+                        prose-p:text-foreground/80 prose-p:text-sm prose-p:mb-3
+                        prose-strong:text-primary prose-strong:font-semibold prose-strong:bg-primary/10 prose-strong:px-1 prose-strong:rounded
+                        prose-ul:text-sm prose-li:text-foreground/70 prose-li:mb-1"
+                      >
+                        <ReactMarkdown>{editedContent}</ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex gap-2 pt-4 border-t border-border/50">
                     <Button
