@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // Not using Supabase database anymore - saving via our API
 import { useAuth } from "@/contexts/AuthContext";
-import { getResponseError } from "@/lib/utils";
+import { getApiBase, getApiBaseList, getResponseError } from "@/lib/utils";
 
 interface GeneratedBlogData {
   title: string;
@@ -81,9 +81,7 @@ export default function Generate() {
       const publishableKey = (
         import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ""
       ).trim();
-      const apiBase = (import.meta.env.VITE_API_BASE || "")
-        .trim()
-        .replace(/\/+$/, "");
+      const apiBaseCandidates = getApiBaseList();
       const payload = { topic, tone, wordCount };
       let response: Response | null = null;
 
@@ -97,7 +95,7 @@ export default function Generate() {
       };
 
       const proxyTargets = [
-        ...(apiBase ? [`${apiBase}/api/generate`] : []),
+        ...apiBaseCandidates.map((base) => `${base}/api/generate`),
         "/api/generate",
       ];
 

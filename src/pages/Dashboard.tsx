@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 // Using custom backend API instead of Supabase
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { getResponseError } from "@/lib/utils";
+import { getApiBase, getResponseError } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -40,12 +40,9 @@ export default function Dashboard() {
   const fetchBlogs = async () => {
     try {
       const token = localStorage.getItem("bg_token");
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE || "http://localhost:4000"}/api/blogs`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(`${getApiBase()}/api/blogs`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const errorText = await getResponseError(res);
         throw new Error(errorText || "Failed to fetch blogs");
@@ -67,15 +64,10 @@ export default function Dashboard() {
   const deleteBlog = async (id: string) => {
     try {
       const token = localStorage.getItem("bg_token");
-      const res = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE || "http://localhost:4000"
-        }/api/blogs/${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(`${getApiBase()}/api/blogs/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const errorText = await getResponseError(res);
         throw new Error(errorText || "Failed to delete");

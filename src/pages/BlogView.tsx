@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 // Using custom backend API for fetching blog
 import { Button } from "@/components/ui/button";
-import { getResponseError } from "@/lib/utils";
+import { getApiBase, getResponseError } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Download, Calendar, Tag, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -36,14 +36,9 @@ export default function BlogView() {
   const fetchBlog = async () => {
     try {
       const token = localStorage.getItem("bg_token");
-      const res = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE || "http://localhost:4000"
-        }/api/blogs/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(`${getApiBase()}/api/blogs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const errorText = await getResponseError(res);
         throw new Error(errorText || "Failed to fetch blog");

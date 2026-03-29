@@ -7,7 +7,7 @@ import {
 } from "react";
 // Using custom backend with MongoDB Atlas + JWT
 import { useToast } from "@/hooks/use-toast";
-import { getResponseError } from "@/lib/utils";
+import { getApiBase, getResponseError } from "@/lib/utils";
 
 interface AuthUser {
   id: string;
@@ -35,14 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  const getApiBase = () => {
-    const raw = import.meta.env.VITE_API_BASE;
-    if (raw && raw.trim().length > 0) {
-      return raw.replace(/\/+$/, "");
-    }
-    return "http://localhost:4000";
-  };
 
   const API_BASE = getApiBase();
 

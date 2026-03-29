@@ -21,3 +21,17 @@ export async function getResponseError(response: Response): Promise<string> {
     return response.statusText || `HTTP ${response.status}`;
   }
 }
+
+export function getApiBaseList(raw?: string): string[] {
+  const source = raw ?? import.meta.env.VITE_API_BASE ?? "";
+  return source
+    .split("||")
+    .flatMap((entry) => entry.split(/[;,]/))
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => entry.replace(/\/+$|\s+$/g, ""));
+}
+
+export function getApiBase(raw?: string): string {
+  return getApiBaseList(raw)[0] || "http://localhost:4000";
+}
