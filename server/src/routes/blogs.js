@@ -80,10 +80,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(404).json({ error: 'Not found' });
         }
-        const blog = await Blog.findById(id);
-        if (!blog) return res.status(404).json({ error: 'Not found' });
-        if (String(blog.userId) !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
-        await blog.remove();
+        const result = await Blog.deleteOne({ _id: id, userId: req.user.id });
+        if (!result.deletedCount) {
+            return res.status(404).json({ error: 'Not found' });
+        }
         res.json({ success: true });
     } catch (err) {
         console.error(err);
