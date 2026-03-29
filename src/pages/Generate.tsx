@@ -72,22 +72,92 @@ export default function Generate() {
     setGeneratedBlog(null);
 
     try {
-      const apiBase = (import.meta.env.VITE_API_BASE || "http://localhost:4000")
+      const rawSupabaseUrl = (import.meta.env.VITE_SUPABASE_URL || "").trim();
+      const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID || "").trim();
+      const computedUrl = projectId ? `https://${projectId}.supabase.co` : "";
+      const supabaseUrl = (rawSupabaseUrl || computedUrl)
         .trim()
         .replace(/\/+$/, "");
-      if (!apiBase) {
-        throw new Error(
-          "API base URL is not configured. Set VITE_API_BASE or start the backend on http://localhost:4000.",
-        );
+      const publishableKey = (
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ""
+      ).trim();
+      const apiBase = (import.meta.env.VITE_API_BASE || "")
+        .trim()
+        .replace(/\/+$/, "");
+      const useProxy = Boolean(apiBase);
+      const payload = { topic, tone, wordCount };
+      let response: Response | null = null;
+
+      const getSupabaseFunctionUrl = () => {
+        if (!supabaseUrl || supabaseUrl === "https://undefined.supabase.co") {
+          throw new Error(
+            "Supabase function URL is not configured. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID.",
+          );
+        }
+        return `${supabaseUrl}/functions/v1/generate-blog`;
+      };
+
+      const fetchFromProxy = async () => {
+        const response = await fetch(`${apiBase}/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            (await getResponseError(response)) ||
+              `Proxy server responded with ${response.status}`,
+          );
+        }
+
+        return response;
+      };
+
+      const fetchFromSupabase = async () => {
+        const supabaseFunctionUrl = getSupabaseFunctionUrl();
+
+        if (!publishableKey) {
+          throw new Error(
+            "Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.",
+          );
+        }
+
+        const response = await fetch(supabaseFunctionUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${publishableKey}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            (await getResponseError(response)) ||
+              `Supabase function responded with ${response.status}`,
+          );
+        }
+
+        return response;
+      };
+
+      if (useProxy) {
+        try {
+          response = await fetchFromProxy();
+        } catch (proxyError) {
+          console.warn(
+            "Proxy generate request failed, falling back to Supabase directly.",
+            proxyError,
+          );
+        }
       }
 
-      const response = await fetch(`${apiBase}/api/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ topic, tone, wordCount }),
-      });
+      if (!response) {
+        response = await fetchFromSupabase();
+      }
 
       if (!response.ok) {
         const errorText = await getResponseError(response);

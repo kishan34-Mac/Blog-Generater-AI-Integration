@@ -1,10 +1,21 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Sparkles, LogOut, Home, LayoutDashboard } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Sparkles, LogOut, LayoutDashboard, Moon, Sun } from "lucide-react";
 
 export function Navbar() {
   const { user, signOut } = useAuth();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentTheme = mounted ? resolvedTheme || theme : "light";
+  const nextTheme = currentTheme === "dark" ? "light" : "dark";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card">
@@ -14,7 +25,10 @@ export function Navbar() {
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text"> Blog Generator</span>
+            <span className="text-xl font-bold gradient-text">
+              {" "}
+              Blog Generator
+            </span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -32,7 +46,23 @@ export function Navbar() {
                     Generate
                   </Link>
                 </Button>
-                <Button variant="outline" onClick={signOut} className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setTheme(nextTheme)}
+                  className="p-2"
+                  title={`Switch to ${nextTheme} mode`}
+                >
+                  {currentTheme === "dark" ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={signOut}
+                  className="flex items-center gap-2"
+                >
                   <LogOut className="w-4 h-4" />
                   Sign Out
                 </Button>
@@ -42,7 +72,10 @@ export function Navbar() {
                 <Button variant="ghost" asChild>
                   <Link to="/auth">Sign In</Link>
                 </Button>
-                <Button asChild className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                <Button
+                  asChild
+                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                >
                   <Link to="/auth">Get Started</Link>
                 </Button>
               </>

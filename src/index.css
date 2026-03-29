@@ -8,49 +8,113 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 263 70% 50%;
     --primary-foreground: 210 40% 98%;
     --primary-glow: 271 91% 65%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 222 15% 94%;
+    --secondary-foreground: 222 15% 20%;
 
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 214 14% 86%;
+    --muted-foreground: 215 20% 35%;
 
     --accent: 271 91% 65%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 63% 31%;
+    --destructive: 359 65% 52%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
+    --border: 222 15% 90%;
+    --input: 222 15% 96%;
     --ring: 263 70% 50%;
 
     --radius: 1rem;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(263 70% 50%) 0%, hsl(271 91% 65%) 50%, hsl(330 81% 60%) 100%);
-    --gradient-secondary: linear-gradient(180deg, hsl(224 71% 4%) 0%, hsl(223 47% 11%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(224 71% 4% / 0.5) 0%, hsl(223 47% 11% / 0.3) 100%);
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(263 70% 50%) 0%,
+      hsl(271 91% 65%) 50%,
+      hsl(330 81% 60%) 100%
+    );
+    --gradient-secondary: linear-gradient(
+      180deg,
+      hsl(0 0% 100%) 0%,
+      hsl(222 15% 94%) 100%
+    );
+    --gradient-card: linear-gradient(
+      135deg,
+      hsl(0 0% 100% / 0.8) 0%,
+      hsl(222 15% 94% / 0.9) 100%
+    );
 
     /* Shadows */
     --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
-    --shadow-card: 0 8px 32px 0 hsl(0 0% 0% / 0.37);
+    --shadow-card: 0 8px 32px 0 hsl(0 0% 0% / 0.12);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+.dark {
+  --background: 224 71% 4%;
+  --foreground: 213 31% 91%;
+
+  --card: 224 71% 4%;
+  --card-foreground: 213 31% 91%;
+
+  --popover: 224 71% 4%;
+  --popover-foreground: 213 31% 91%;
+
+  --primary: 263 70% 50%;
+  --primary-foreground: 210 40% 98%;
+  --primary-glow: 271 91% 65%;
+
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 223 47% 11%;
+  --muted-foreground: 215 20% 65%;
+
+  --accent: 271 91% 65%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 215 28% 17%;
+  --input: 215 28% 17%;
+  --ring: 263 70% 50%;
+
+  --gradient-primary: linear-gradient(
+    135deg,
+    hsl(263 70% 50%) 0%,
+    hsl(271 91% 65%) 50%,
+    hsl(330 81% 60%) 100%
+  );
+  --gradient-secondary: linear-gradient(
+    180deg,
+    hsl(224 71% 4%) 0%,
+    hsl(223 47% 11%) 100%
+  );
+  --gradient-card: linear-gradient(
+    135deg,
+    hsl(224 71% 4% / 0.5) 0%,
+    hsl(223 47% 11% / 0.3) 100%
+  );
+
+  --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
+  --shadow-card: 0 8px 32px 0 hsl(0 0% 0% / 0.37);
 }
 
 @layer base {
@@ -60,12 +124,21 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    background: linear-gradient(135deg, hsl(224 71% 4%) 0%, hsl(223 47% 11%) 50%, hsl(224 71% 4%) 100%);
-    font-family: 'Inter', sans-serif;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--background)) 0%,
+      hsl(var(--card)) 100%
+    );
+    font-family: "Inter", sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Poppins", sans-serif;
   }
 }
 
@@ -88,13 +161,15 @@ All colors MUST be HSL.
   }
 
   .gradient-border::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: -1px;
     border-radius: inherit;
     padding: 1px;
     background: var(--gradient-primary);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -106,7 +181,8 @@ All colors MUST be HSL.
   }
 
   @keyframes gradient {
-    0%, 100% {
+    0%,
+    100% {
       background-position: 0% 50%;
     }
     50% {
