@@ -2,8 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
@@ -17,6 +18,7 @@ process.on('unhandledRejection', (reason) => {
 
 const authRoutes = require('./routes/auth');
 const blogRoutes = require('./routes/blogs');
+const generateRoutes = require('./routes/generate');
 
 const app = express();
 app.use(express.json());
@@ -34,6 +36,7 @@ app.options('*', cors());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/generate', generateRoutes);
 
 const start = async () => {
     try {

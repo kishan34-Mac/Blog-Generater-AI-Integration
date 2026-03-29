@@ -72,37 +72,22 @@ export default function Generate() {
     setGeneratedBlog(null);
 
     try {
-      const rawSupabaseUrl = (import.meta.env.VITE_SUPABASE_URL || "").trim();
-      const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID || "").trim();
-      const computedUrl = projectId ? `https://${projectId}.supabase.co` : "";
-      const supabaseUrl = (rawSupabaseUrl || computedUrl)
+      const apiBase = (import.meta.env.VITE_API_BASE || "http://localhost:4000")
         .trim()
         .replace(/\/+$/, "");
-      const publishableKey = (
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ""
-      ).trim();
-      if (!supabaseUrl || supabaseUrl === "https://undefined.supabase.co") {
+      if (!apiBase) {
         throw new Error(
-          "Supabase function URL is not configured. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID.",
-        );
-      }
-      if (!publishableKey) {
-        throw new Error(
-          "Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.",
+          "API base URL is not configured. Set VITE_API_BASE or start the backend on http://localhost:4000.",
         );
       }
 
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/generate-blog`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${publishableKey}`,
-          },
-          body: JSON.stringify({ topic, tone, wordCount }),
+      const response = await fetch(`${apiBase}/api/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ topic, tone, wordCount }),
+      });
 
       if (!response.ok) {
         const errorText = await getResponseError(response);
