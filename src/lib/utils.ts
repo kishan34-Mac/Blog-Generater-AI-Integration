@@ -22,16 +22,48 @@ export async function getResponseError(response: Response): Promise<string> {
   }
 }
 
+const LOCALHOST_HOSTNAMES = ["localhost", "127.0.0.1"];
+
+const normalizeApiEntry = (entry: string) =>
+  entry
+    .trim()
+    .replace(/^['"]+|['"]+$/g, "")
+    .replace(/\/+$|\s+$/g, "");
+
+const isLocalhost = (value: string) => {
+  try {
+    const url = new URL(value);
+    return LOCALHOST_HOSTNAMES.includes(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
 export function getApiBaseList(raw?: string): string[] {
   const source = raw ?? import.meta.env.VITE_API_BASE ?? "";
-  return source
+  const entries = source
     .split("||")
     .flatMap((entry) => entry.split(/[;,]/))
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((entry) => entry.replace(/\/+$|\s+$/g, ""));
+    .map(normalizeApiEntry)
+    .filter(Boolean);
+
+  if (typeof window === "undefined") {
+    return entries;
+  }
+
+  const isBrowserLocalhost = LOCALHOST_HOSTNAMES.includes(
+    window.location.hostname,
+  );
+
+  const localEntries = entries.filter(isLocalhost);
+  const remoteEntries = entries.filter((entry) => !isLocalhost(entry));
+
+  return isBrowserLocalhost
+    ? [...localEntries, ...remoteEntries]
+    : [...remoteEntries, ...localEntries];
 }
 
 export function getApiBase(raw?: string): string {
-  return getApiBaseList(raw)[0] || "http://localhost:4000";
+  const candidates = getApiBaseList(raw);
+  return candidates[0] || "http://localhost:4000";
 }

@@ -94,10 +94,9 @@ export default function Generate() {
         return `${supabaseUrl}/functions/v1/generate-blog`;
       };
 
-      const proxyTargets = [
-        ...apiBaseCandidates.map((base) => `${base}/api/generate`),
-        "/api/generate",
-      ];
+      const proxyTargets = apiBaseCandidates.length
+        ? apiBaseCandidates.map((base) => `${base}/api/generate`)
+        : ["/api/generate"];
 
       const fetchProxy = async (url: string) => {
         const response = await fetch(url, {
