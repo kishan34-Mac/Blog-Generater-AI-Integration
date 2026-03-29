@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 // Not using Supabase database anymore - saving via our API
 import { useAuth } from "@/contexts/AuthContext";
-import { getApiBase, getApiBaseList, getResponseError } from "@/lib/utils";
+import { getApiBase, getResponseError } from "@/lib/utils";
 
 interface GeneratedBlogData {
   title: string;
@@ -46,7 +45,6 @@ export default function Generate() {
   const [tone, setTone] = useState("professional");
   const [wordCount, setWordCount] = useState(800);
   const [generating, setGenerating] = useState(false);
-  const [streamedContent, setStreamedContent] = useState("");
   const [generatedBlog, setGeneratedBlog] = useState<GeneratedBlogData | null>(
     null,
   );
@@ -68,283 +66,69 @@ export default function Generate() {
     }
 
     setGenerating(true);
-    setStreamedContent("");
     setGeneratedBlog(null);
 
     try {
-      const rawSupabaseUrl = (
-        import.meta.env.VITE_SUPABASE_URL ||
-        import.meta.env.VITE_SUPABASE_PROJECT_URL ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ||
-        import.meta.env.PUBLIC_SUPABASE_URL ||
-        import.meta.env.PUBLIC_SUPABASE_PROJECT_URL ||
-        ""
-      ).trim();
-      const projectId = (
-        import.meta.env.VITE_SUPABASE_PROJECT_ID ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID ||
-        import.meta.env.PUBLIC_SUPABASE_PROJECT_ID ||
-        ""
-      ).trim();
-      const computedUrl = projectId ? `https://${projectId}.supabase.co` : "";
-      const supabaseUrl = (rawSupabaseUrl || computedUrl)
-        .trim()
-        .replace(/\/+$/, "");
-      const publishableKey = (
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-        import.meta.env.VITE_SUPABASE_KEY ||
-        import.meta.env.VITE_SUPABASE_ANON_KEY ||
-        import.meta.env.VITE_SUPABASE_SERVICE_KEY ||
-        import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_KEY ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY ||
-        import.meta.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
-        import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        import.meta.env.PUBLIC_SUPABASE_KEY ||
-        import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
-        import.meta.env.PUBLIC_SUPABASE_SERVICE_KEY ||
-        import.meta.env.PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
-        ""
-      ).trim();
-      const apiBaseCandidates = getApiBaseList();
-      const payload = { topic, tone, wordCount };
-      let response: Response | null = null;
-
-      const getSupabaseFunctionUrl = () => {
-        if (!supabaseUrl || supabaseUrl === "https://undefined.supabase.co") {
-          throw new Error(
-            "Supabase function URL is not configured. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID.",
-          );
-        }
-        return `${supabaseUrl}/functions/v1/generate-blog`;
-      };
-
-      const proxyTargets = apiBaseCandidates.length
-        ? apiBaseCandidates.map((base) => `${base}/api/generate`)
-        : ["/api/generate"];
-
-      const fetchProxy = async (url: string) => {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            (await getResponseError(response)) ||
-              `Proxy server responded with ${response.status}`,
-          );
-        }
-
-        return response;
-      };
-
-      const fetchFromSupabase = async () => {
-        const supabaseFunctionUrl = getSupabaseFunctionUrl();
-
-        if (!publishableKey) {
-          throw new Error(
-            "Supabase publishable key is not configured. Set VITE_SUPABASE_PUBLISHABLE_KEY.",
-          );
-        }
-
-        const response = await fetch(supabaseFunctionUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${publishableKey}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            (await getResponseError(response)) ||
-              `Supabase function responded with ${response.status}`,
-          );
-        }
-
-        return response;
-      };
-
-      for (const url of proxyTargets) {
-        try {
-          response = await fetchProxy(url);
-          break;
-        } catch (proxyError) {
-          console.warn(`Proxy generate request failed for ${url}.`, proxyError);
-          response = null;
-        }
-      }
-
-      if (!response) {
-        try {
-          response = await fetchFromSupabase();
-        } catch (supabaseError) {
-          console.error("Supabase fallback failed:", supabaseError);
-          if (
-            supabaseError instanceof Error &&
-            supabaseError.message.includes(
-              "Supabase function URL is not configured",
-            )
-          ) {
-            throw new Error(
-              "Blog generation is not available: configure VITE_API_BASE for your backend or VITE_SUPABASE_URL/VITE_SUPABASE_PROJECT_ID for direct Supabase access.",
-            );
-          }
-          throw supabaseError;
-        }
-      }
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/api/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic, tone, wordCount }),
+      });
 
       if (!response.ok) {
         const errorText = await getResponseError(response);
-        throw new Error(errorText || "Failed to generate blog");
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.includes("text/event-stream")) {
-        const errorText = await response.text();
         throw new Error(
-          errorText ||
-            "Unexpected response type from AI service. Ensure VITE_SUPABASE_URL is configured correctly.",
+          errorText || `Generate request failed: ${response.status}`,
         );
       }
 
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let fullContent = "";
-
-      const processLine = (line: string) => {
-        if (!line.startsWith("data: ")) return;
-
-        const data = line.slice(6);
-        if (data === "[DONE]") return;
-
-        try {
-          const parsed = JSON.parse(data);
-          const content = parsed.choices?.[0]?.delta?.content;
-          if (content) {
-            fullContent += content;
-            setStreamedContent(fullContent);
-          }
-        } catch {
-          // Ignore parse errors for incomplete or malformed event lines
-        }
+      const data = await response.json();
+      const blogData: GeneratedBlogData = {
+        title: data.title || `Blog about ${topic}`,
+        meta_description:
+          data.meta_description || `Generated blog about ${topic}`,
+        keywords: data.keywords || [],
+        content: data.content || data.blog || "",
       };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      setGeneratedBlog(blogData);
+      setEditedContent(blogData.content);
 
-        buffer += decoder.decode(value, { stream: true });
-
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          processLine(line);
-        }
-      }
-
-      if (buffer.trim()) {
-        processLine(buffer);
-      }
-
-      // Parse the final content as JSON
-      try {
-        // Strip markdown code blocks if present
-        let cleanContent = fullContent.trim();
-        if (cleanContent.startsWith("```")) {
-          cleanContent = cleanContent
-            .replace(/^```(?:json)?\n?/, "")
-            .replace(/\n?```$/, "");
-        }
-
-        let blogData;
-        try {
-          blogData = JSON.parse(cleanContent);
-        } catch (e) {
-          // If JSON parsing fails, try to extract JSON from the response
-          const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            blogData = JSON.parse(jsonMatch[0]);
-          } else {
-            throw e;
-          }
-        }
-
-        // Convert escaped newlines to actual newlines for proper markdown rendering
-        if (blogData.content) {
-          blogData.content = blogData.content
-            .replace(/\\n\\n/g, "\n\n")
-            .replace(/\\n/g, "\n")
-            .replace(/\\t/g, "\t");
-        }
-
-        setGeneratedBlog(blogData);
-        setEditedContent(blogData.content);
-
-        // Save to database
-        const token = localStorage.getItem("bg_token");
-        const res = await fetch(
-          `${
-            import.meta.env.VITE_API_BASE || "http://localhost:4000"
-          }/api/blogs`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              topic,
-              tone,
-              word_count: wordCount,
-              title: blogData.title,
-              meta_description: blogData.meta_description,
-              content: blogData.content,
-              keywords: blogData.keywords || [],
-            }),
+      const token = localStorage.getItem("bg_token");
+      if (token) {
+        const saveResponse = await fetch(`${apiBase}/api/blogs`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        );
-        if (!res.ok) {
-          const errorText = await getResponseError(res);
-          throw new Error(errorText || "Failed to save blog");
-        }
-
-        toast({
-          title: "Blog generated!",
-          description: "Your blog has been saved to your dashboard",
+          body: JSON.stringify({
+            topic,
+            tone,
+            word_count: wordCount,
+            title: blogData.title,
+            meta_description: blogData.meta_description,
+            content: blogData.content,
+            keywords: blogData.keywords,
+          }),
         });
-      } catch (parseError) {
-        console.error("Failed to parse or save blog data:", parseError);
 
-        // Still show the content if we have it, even if we couldn't parse it
-        if (fullContent && fullContent.length > 50) {
-          toast({
-            title: "Partial success",
-            description:
-              "Blog content generated but may have formatting issues. Try generating again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Generation incomplete",
-            description:
-              "The blog couldn't be saved properly. Please try again.",
-            variant: "destructive",
-          });
+        if (!saveResponse.ok) {
+          const errorText = await getResponseError(saveResponse);
+          throw new Error(errorText || "Failed to save generated blog");
         }
       }
+
+      toast({
+        title: "Blog generated!",
+        description:
+          token !== null
+            ? "Your blog has been generated and saved."
+            : "Your blog has been generated. Log in to save it.",
+      });
     } catch (error: unknown) {
       console.error("Error generating blog:", error);
       const message =
@@ -598,62 +382,11 @@ export default function Generate() {
               </div>
             </CardHeader>
             <CardContent className="bg-background/30 rounded-lg p-6 min-h-[400px]">
-              {generating || streamedContent ? (
-                <div className="space-y-4">
-                  {(() => {
-                    try {
-                      const parsed = JSON.parse(streamedContent);
-                      return (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <h3 className="text-2xl font-heading font-bold gradient-text">
-                              {parsed.title}
-                            </h3>
-                            <p className="text-sm text-foreground/80">
-                              {parsed.meta_description}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {parsed.keywords?.map(
-                                (keyword: string, i: number) => (
-                                  <span
-                                    key={i}
-                                    className="px-2 py-1 text-xs rounded-full bg-primary/20 text-primary"
-                                  >
-                                    {keyword}
-                                  </span>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                          <div
-                            className="prose prose-invert prose-sm max-w-none font-body
-                            prose-headings:font-heading
-                            prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-4 prose-h2:mt-6
-                            prose-h2:bg-gradient-to-r prose-h2:from-primary prose-h2:via-accent prose-h2:to-primary 
-                            prose-h2:bg-clip-text prose-h2:text-transparent
-                            prose-h3:text-lg prose-h3:font-semibold prose-h3:mb-3 prose-h3:mt-4
-                            prose-h3:text-accent
-                            prose-p:text-foreground/80 prose-p:text-sm prose-p:mb-3
-                            prose-strong:text-primary prose-strong:font-semibold prose-strong:bg-primary/10 prose-strong:px-1 prose-strong:rounded
-                            prose-ul:text-sm prose-li:text-foreground/70 prose-li:mb-1"
-                          >
-                            <ReactMarkdown>{parsed.content}</ReactMarkdown>
-                          </div>
-                        </div>
-                      );
-                    } catch {
-                      return (
-                        <div className="prose prose-invert max-w-none">
-                          <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                            {streamedContent || "Generating..."}
-                            {generating && (
-                              <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse" />
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                  })()}
+              {generating ? (
+                <div className="prose prose-invert max-w-none">
+                  <div className="text-sm text-muted-foreground">
+                    Generating your blog. Please wait...
+                  </div>
                 </div>
               ) : generatedBlog ? (
                 <div className="space-y-4">
