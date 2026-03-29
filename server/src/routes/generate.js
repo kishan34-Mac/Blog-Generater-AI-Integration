@@ -1,104 +1,49 @@
 const express = require('express');
-const { Readable } = require('stream');
-
 const router = express.Router();
 
-const getSupabaseUrl = () => {
-    const rawUrl = (
-        process.env.SUPABASE_URL ||
-        process.env.VITE_SUPABASE_URL ||
-        process.env.SUPABASE_PROJECT_URL ||
-        process.env.VITE_SUPABASE_PROJECT_URL ||
-        process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        process.env.NEXT_PUBLIC_SUPABASE_PROJECT_URL ||
-        process.env.PUBLIC_SUPABASE_URL ||
-        process.env.PUBLIC_SUPABASE_PROJECT_URL ||
-        ''
-    ).trim();
-
-    const projectId = (
-        process.env.SUPABASE_PROJECT_ID ||
-        process.env.VITE_SUPABASE_PROJECT_ID ||
-        process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID ||
-        process.env.PUBLIC_SUPABASE_PROJECT_ID ||
-        ''
-    ).trim();
-
-    if (rawUrl) {
-        return rawUrl.replace(/\/+$/, '');
-    }
-
-    if (projectId) {
-        return `https://${projectId}.supabase.co`;
-    }
-
-    return '';
-};
-
-const getSupabaseKey = () => {
-    return (
-        process.env.SUPABASE_PUBLISHABLE_KEY ||
-        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.SUPABASE_ANON_KEY ||
-        process.env.VITE_SUPABASE_ANON_KEY ||
-        process.env.SUPABASE_SERVICE_KEY ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY ||
-        process.env.VITE_SUPABASE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
-        process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.PUBLIC_SUPABASE_KEY ||
-        process.env.PUBLIC_SUPABASE_ANON_KEY ||
-        process.env.PUBLIC_SUPABASE_SERVICE_KEY ||
-        process.env.PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
-        ''
-    ).trim();
-};
-
+// 🔥 Simple blog generator (replace later with AI API)
 router.post('/', async (req, res) => {
     try {
-        const supabaseUrl = getSupabaseUrl();
-        const supabaseKey = getSupabaseKey();
+        const { topic, tone, words } = req.body;
 
-        if (!supabaseUrl || !supabaseKey) {
-            return res
-                .status(500)
-                .json({ error: 'Supabase function configuration missing on backend' });
+        // ✅ Validation
+        if (!topic) {
+            return res.status(400).json({ error: "Topic is required" });
         }
 
-        const functionUrl = `${supabaseUrl}/functions/v1/generate-blog`;
-        const response = await fetch(functionUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify(req.body),
+        // ✅ Generate blog (dummy logic for now)
+        const blog = `
+📝 Blog Topic: ${topic}
+
+Tone: ${tone || "Informative"}
+Length: ${words || 500} words
+
+---
+
+${topic} is an important subject in today’s world. In this blog, we explore key aspects of ${topic} in a ${tone || "clear and informative"} manner.
+
+1. Introduction  
+${topic} has gained significant attention due to its impact and relevance.
+
+2. Key Insights  
+Understanding ${topic} helps individuals and businesses make better decisions.
+
+3. Conclusion  
+In conclusion, ${topic} continues to evolve and plays a vital role in modern development.
+
+---
+
+✨ This is a sample generated blog. Integrate AI API for real content.
+`;
+
+        res.json({
+            success: true,
+            blog
         });
 
-        if (!response.ok) {
-            const text = await response.text();
-            return res.status(response.status).send(text);
-        }
-
-        response.headers.forEach((value, name) => {
-            if (name.toLowerCase() === 'transfer-encoding') return;
-            res.setHeader(name, value);
-        });
-        res.status(response.status);
-
-        if (!response.body) {
-            return res.end();
-        }
-
-        const nodeStream = Readable.fromWeb(response.body);
-        nodeStream.pipe(res);
     } catch (error) {
-        console.error('Backend generate proxy error:', error);
-        res.status(500).json({ error: 'Failed to proxy generate request' });
+        console.error("🔥 Generate Error:", error);
+        res.status(500).json({ error: "Failed to generate blog" });
     }
 });
 
