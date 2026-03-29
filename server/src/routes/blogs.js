@@ -29,7 +29,7 @@ const authMiddleware = (req, res, next) => {
 
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const blogs = await Blog.find({ userId: req.user.id }).sort({ created_at: -1 });
+        const blogs = await Blog.find({ userId: req.user.id }).sort({ created_at: -1 }).lean({ virtuals: true });
         res.json({ blogs });
     } catch (err) {
         console.error(err);
@@ -40,7 +40,7 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const blog = await Blog.findById(id);
+        const blog = await Blog.findById(id).lean({ virtuals: true });
         if (!blog) return res.status(404).json({ error: 'Not found' });
         if (String(blog.userId) !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
         res.json({ blog });
@@ -63,7 +63,7 @@ router.post('/', authMiddleware, async (req, res) => {
             content,
             keywords,
         });
-        res.json({ blog });
+        res.json({ blog: blog.toObject({ virtuals: true }) });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error creating blog' });
