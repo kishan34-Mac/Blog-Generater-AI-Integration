@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Blog = require('../models/Blog');
 const jwt = require('jsonwebtoken');
 
@@ -40,6 +41,9 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ error: 'Not found' });
+        }
         const blog = await Blog.findById(id).lean({ virtuals: true });
         if (!blog) return res.status(404).json({ error: 'Not found' });
         if (String(blog.userId) !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
@@ -73,6 +77,9 @@ router.post('/', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ error: 'Not found' });
+        }
         const blog = await Blog.findById(id);
         if (!blog) return res.status(404).json({ error: 'Not found' });
         if (String(blog.userId) !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
