@@ -54,6 +54,21 @@ app.use(cors({
 }));
 
 // ✅ Routes
+const handleHealthCheck = (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const dbStatusMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+    res.status(200).json({
+        status: 'ok',
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: dbStatusMap[dbState] || 'unknown',
+    });
+};
+
+app.get('/health', handleHealthCheck);
+app.get('/api/health', handleHealthCheck);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/generate', generateRoutes);
@@ -90,9 +105,26 @@ const start = async () => {
         console.log('✅ Connected to MongoDB');
 
         const port = process.env.PORT || 4000;
-        app.listen(port, () =>
-            console.log(`🚀 Server running on port ${port}`)
-        );
+        app.listen(port, () => {
+            console.log(`🚀 Server running on port ${port}`);
+
+            // ✅ 5-Minute Health API Ping Schedule (Keep-Alive & Monitoring)
+            const FIVE_MINUTES_MS = 5 * 60 * 1000;
+            const healthPing = async () => {
+                const baseUrl = process.env.BACKEND_URL || `http://localhost:${port}`;
+                const healthUrl = `${baseUrl.replace(/\/+$/, '')}/api/health`;
+                try {
+                    const response = await fetch(healthUrl);
+                    const data = await response.json();
+                    console.log(`[Health Check Ping] ${new Date().toISOString()} - Status ${response.status}:`, data);
+                } catch (err) {
+                    console.warn(`[Health Check Ping Warning] ${new Date().toISOString()} - Ping error:`, err.message);
+                }
+            };
+
+            // Run periodic ping every 5 minutes
+            setInterval(healthPing, FIVE_MINUTES_MS);
+        });
     } catch (err) {
         console.error('❌ Failed to start server', err);
         process.exit(1);
